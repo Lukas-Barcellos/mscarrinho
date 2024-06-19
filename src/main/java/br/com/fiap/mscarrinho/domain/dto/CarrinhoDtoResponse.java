@@ -1,5 +1,6 @@
 package br.com.fiap.mscarrinho.domain.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import br.com.fiap.mscarrinho.domain.entity.FormaPagamentoEnum;
@@ -9,6 +10,6 @@ public record CarrinhoDtoResponse(
     Long idUsuario,
     FormaPagamentoEnum formaPagamento,
     int quantidadeItens,
-    double valorTotal,
+    BigDecimal valorTotal,
     List<ItemDtoResponse> itens
 ) {}

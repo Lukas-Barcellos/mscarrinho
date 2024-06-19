@@ -1,8 +1,10 @@
 package br.com.fiap.mscarrinho.domain.entity;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.fiap.estrutura.exception.BusinessException;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import jakarta.persistence.CascadeType;
@@ -36,16 +38,20 @@ public class CarrinhoEntity {
     @Column(name = "qtd_itens")
     private int quantidadeItens;
     @Column(name = "valor_total")
-    private double valorTotal;
-    @OneToMany(mappedBy = "itens", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private BigDecimal valorTotal;
+    @OneToMany(mappedBy = "carrinho", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ItemEntity> listaItens;
     
-    public CarrinhoEntity(Long idUsuario, FormaPagamentoEnum formaPagamento, int quantidadeItens, double valorTotal,
+    public CarrinhoEntity(Long idUsuario, FormaPagamentoEnum formaPagamento, int quantidadeItens, BigDecimal valorTotal,
             List<ItemEntity> listaItens) {
         this.idUsuario = idUsuario;
         this.formaPagamento = formaPagamento;
         this.quantidadeItens = quantidadeItens;
         this.valorTotal = valorTotal;
+        this.listaItens = listaItens;
+    }
+
+    public CarrinhoEntity(List<ItemEntity> listaItens) {
         this.listaItens = listaItens;
     }
 
@@ -68,6 +74,13 @@ public class CarrinhoEntity {
             });
         }
         return itens;
+    }
+
+    public void calvularValorTotalCarrinho(BigDecimal valorTotal) throws BusinessException{
+        if(valorTotal.compareTo(BigDecimal.ZERO) == 0 || valorTotal.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("Valor não pode ser igual ou menor que zero");
+        }
+        this.valorTotal = this.valorTotal.add(valorTotal);
     }
 
     

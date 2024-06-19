@@ -6,10 +6,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableFeignClients
-public class MscarrinhoApplication {
+public class CarrinhoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(MscarrinhoApplication.class, args);
+		SpringApplication.run(CarrinhoApplication.class, args);
 	}
 
 }

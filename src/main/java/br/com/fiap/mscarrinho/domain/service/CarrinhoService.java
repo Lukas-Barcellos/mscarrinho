@@ -1,12 +1,15 @@
 package br.com.fiap.mscarrinho.domain.service;
 
+import java.math.BigDecimal;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.fiap.estrutura.exception.BusinessException;
 import br.com.fiap.mscarrinho.domain.consumer.ProdutoConsumer;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
-import br.com.fiap.mscarrinho.domain.dto.ItemDtoRequest;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import br.com.fiap.mscarrinho.domain.entity.CarrinhoEntity;
 import br.com.fiap.mscarrinho.domain.entity.ItemEntity;
@@ -30,29 +33,77 @@ public class CarrinhoService {
         this.produtoConsumer = produtoConsumer;
     }
 
-    private CarrinhoDtoResponse criarCarrinho (CarrinhoDtoRequest carrinhoDtoRequest){
+    public CarrinhoDtoResponse adicionarAoCarrinho (CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException{
+        
+        Optional<CarrinhoEntity> carrinhoExistente = carrinhoRepository.findById(carrinhoDtoRequest.idUsuario());
 
-        final CarrinhoEntity carrinho = new CarrinhoEntity(
-            carrinhoDtoRequest.idUsuario(),
-            carrinhoDtoRequest.formaPagamento(),
-            carrinhoDtoRequest.quantidadeItens(),
-            carrinhoDtoRequest.valorTotal(),
-            carrinhoDtoRequest.itens()    
-        );
-
-        CarrinhoEntity carinhoRetorno = carrinhoRepository.save(carrinho);
-        return carinhoRetorno.toDto();
+        CarrinhoEntity carrinho;
+        if(carrinhoExistente.isPresent()) {
+            carrinho = carrinhoExistente.get();
+        } else {
+            carrinho = new CarrinhoEntity(carrinhoDtoRequest.toEntityListItem());
+        }        
+        this.calvularValorTotalCarrinho(carrinho);
+        
+        CarrinhoEntity carrinhoRetorno = carrinhoRepository.save(carrinho);
+        return carrinhoRetorno.toDto();
     }
 
-    private ItemDtoResponse adicionarCarrinho(ItemDtoRequest itemDtoRequest) {
-        final ItemEntity item = new ItemEntity(
-            itemDtoRequest.id(),
-            itemDtoRequest.quantidade(),
-            itemDtoRequest.preco()
-        );
+    // public CarrinhoDtoResponse adicionarAoCarrinho(CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
+       
+        
+    //     CarrinhoEntity carrinho;
+    //     if (carrinhoExistente.isPresent()) {
+    //         carrinho = carrinhoExistente.get();
+    //         // Atualiza o carrinho existente com os novos itens
+    //     } else {
+    //         carrinho = new CarrinhoEntity(carrinhoDtoRequest.toEntityListItem());
+    //         // Cria um novo carrinho
+    //     }
+        
+    //     CarrinhoEntity carrinhoRetorno = carrinhoRepository.save(carrinho);
+    //     return carrinhoRetorno.toDto();
+    // }
 
-        ItemEntity itemRetorno = itemRepository.save(item);
-        return itemRetorno.toDto();
+    private CarrinhoEntity buscarCarrinhoEntity(Long id) throws BusinessException {
+        CarrinhoEntity carrinho = carrinhoRepository.findById(id).orElse(null);
+        if(carrinho == null){
+            throw new BusinessException("Produto não encontrado");
+        }
+        return carrinho;
     }
 
+    // public CarrinhoDtoResponse criarCarrinho (CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException{
+        
+    //     final CarrinhoEntity carrinho = new CarrinhoEntity(
+    //         carrinhoDtoRequest.idUsuario(),
+    //         carrinhoDtoRequest.formaPagamento(),
+    //         carrinhoDtoRequest.quantidadeItens(),
+    //         carrinhoDtoRequest.valorTotal(),
+    //         carrinhoDtoRequest.toEntityListItem()   
+    //     );
+    //     this.calvularValorTotalCarrinho(carrinho);
+
+    //     CarrinhoEntity carinhoRetorno = carrinhoRepository.save(carrinho);
+    //     return carinhoRetorno.toDto();
+    // }
+
+    private void calvularValorTotalCarrinho(CarrinhoEntity carrinho)throws BusinessException{
+        for(ItemEntity item : carrinho.getListaItens()) {
+            ItemDtoResponse itemDtoResponse =  this.produtoConsumer.obterProduto(item.getIdProduto());
+            if(itemDtoResponse == null) {
+                throw new BusinessException("Item " + item.getIdProduto() + " não encontrado");
+            }
+            if(itemDtoResponse.preco() == 0) {
+                throw new BusinessException("Item " + item.getIdProduto() + " não possui valor cadastrado");
+            }
+
+            item.setValorItens(this.calcularValorTotalItens(item.getQuantidade(), itemDtoResponse.preco()));
+            carrinho.calvularValorTotalCarrinho(item.getValorItens());
+        }
+     }
+
+    private BigDecimal calcularValorTotalItens(int quantidade, double valorUnitario){
+        return BigDecimal.valueOf(quantidade * valorUnitario);
+    }
 }

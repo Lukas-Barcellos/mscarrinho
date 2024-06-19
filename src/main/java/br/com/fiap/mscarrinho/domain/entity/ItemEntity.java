@@ -1,5 +1,8 @@
 package br.com.fiap.mscarrinho.domain.entity;
 
+import java.math.BigDecimal;
+
+import br.com.fiap.estrutura.exception.BusinessException;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,16 +34,22 @@ public class ItemEntity {
     @Column(name = "preco_un")
     private double preco;
     @Column(name = "valor_total")
-    private double valorItens = quantidade * preco;
+    private BigDecimal valorItens;
     @ManyToOne
     @JoinColumn(name = "id_carrinho")
     private CarrinhoEntity carrinho;
 
 
-    public ItemEntity(long idProduto, int quantidade, double preco) {
+    public ItemEntity(long idProduto, int quantidade) throws BusinessException {
+        if(idProduto == 0) {
+            throw new BusinessException("Produto não informado");
+        }
+        if (quantidade == 0 || quantidade < 0) {
+            throw new BusinessException("Quantidade informada deve ser maior que zero");
+        }
         this.idProduto = idProduto;
         this.quantidade = quantidade;
-        this.preco = preco;
+        this.valorItens = BigDecimal.ZERO;
     }
 
 
@@ -49,6 +58,13 @@ public class ItemEntity {
             this.idProduto, 
             this.quantidade, 
             this.preco); 
+    }
+
+    public void setValorItens(BigDecimal valorTotalItens) throws BusinessException {
+        if(valorTotalItens.compareTo(BigDecimal.ZERO) == 0){
+            throw new BusinessException("Valor total não pode ser igual a zero.");
+        }
+        this.valorItens = valorItens;
     }
 
 }
