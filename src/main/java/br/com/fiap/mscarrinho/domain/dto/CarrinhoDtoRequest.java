@@ -16,7 +16,7 @@ public record CarrinhoDtoRequest(
         List<ItemEntity> itemEntityList = new ArrayList<>();
         itens.forEach(item -> {
             try {
-                itemEntityList.add(new ItemEntity(item.id(), item.quantidade()));
+                itemEntityList.add(new ItemEntity(item.idProduto(), item.quantidade()));
             } catch (BusinessException e) {
                 throw new RuntimeException(e);
             }

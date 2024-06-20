@@ -35,19 +35,45 @@ public class CarrinhoService {
 
     public CarrinhoDtoResponse adicionarAoCarrinho (CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException{
         
-        Optional<CarrinhoEntity> carrinhoExistente = carrinhoRepository.findById(carrinhoDtoRequest.idUsuario());
+        // Optional<CarrinhoEntity> carrinhoExistente = carrinhoRepository.findById(carrinhoDtoRequest.idUsuario());
 
-        CarrinhoEntity carrinho;
-        if(carrinhoExistente.isPresent()) {
-            carrinho = carrinhoExistente.get();
-        } else {
-            carrinho = new CarrinhoEntity(carrinhoDtoRequest.toEntityListItem());
-        }        
+        // if(carrinhoExistente.isPresent()) {
+        //     carrinho = carrinhoExistente.get();
+        // } else {
+        //     carrinho = new CarrinhoEntity(carrinhoDtoRequest.toEntityListItem());
+        // }     
+        
+        final CarrinhoEntity carrinho = new CarrinhoEntity(
+            carrinhoDtoRequest.idUsuario(),
+            carrinhoDtoRequest.toEntityListItem()
+        );
+
         this.calvularValorTotalCarrinho(carrinho);
         
         CarrinhoEntity carrinhoRetorno = carrinhoRepository.save(carrinho);
         return carrinhoRetorno.toDto();
     }
+
+    private void calvularValorTotalCarrinho(CarrinhoEntity carrinho)throws BusinessException{
+        for(ItemEntity item : carrinho.getListaItens()) {
+            ItemDtoResponse itemDtoResponse =  this.produtoConsumer.obterProduto(item.getIdProduto());
+            if(itemDtoResponse == null) {
+                throw new BusinessException("Item " + item.getIdProduto() + " não encontrado");
+            }
+            if(itemDtoResponse.preco() == 0) {
+                throw new BusinessException("Item " + item.getIdProduto() + " não possui valor cadastrado");
+            }
+
+            item.setValorItens(this.calcularValorTotalItens(item.getQuantidade(), itemDtoResponse.preco()));
+            carrinho.setValorTotal(BigDecimal.ZERO);
+            carrinho.calvularValorTotalCarrinho(item.getValorItens());
+        }
+     }
+
+    private BigDecimal calcularValorTotalItens(int quantidade, double valorUnitario){
+        return BigDecimal.valueOf(quantidade * valorUnitario);
+    }
+
 
     // public CarrinhoDtoResponse adicionarAoCarrinho(CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
        
@@ -88,22 +114,4 @@ public class CarrinhoService {
     //     return carinhoRetorno.toDto();
     // }
 
-    private void calvularValorTotalCarrinho(CarrinhoEntity carrinho)throws BusinessException{
-        for(ItemEntity item : carrinho.getListaItens()) {
-            ItemDtoResponse itemDtoResponse =  this.produtoConsumer.obterProduto(item.getIdProduto());
-            if(itemDtoResponse == null) {
-                throw new BusinessException("Item " + item.getIdProduto() + " não encontrado");
-            }
-            if(itemDtoResponse.preco() == 0) {
-                throw new BusinessException("Item " + item.getIdProduto() + " não possui valor cadastrado");
-            }
-
-            item.setValorItens(this.calcularValorTotalItens(item.getQuantidade(), itemDtoResponse.preco()));
-            carrinho.calvularValorTotalCarrinho(item.getValorItens());
-        }
-     }
-
-    private BigDecimal calcularValorTotalItens(int quantidade, double valorUnitario){
-        return BigDecimal.valueOf(quantidade * valorUnitario);
-    }
 }

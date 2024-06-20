@@ -1,7 +1,7 @@
 package br.com.fiap.mscarrinho.domain.dto;
 
 public record ItemDtoRequest(
-    Long id,
+    Long idProduto,
     int quantidade
 ){}    
 

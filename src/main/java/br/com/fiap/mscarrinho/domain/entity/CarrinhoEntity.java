@@ -15,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,7 +52,8 @@ public class CarrinhoEntity {
         this.listaItens = listaItens;
     }
 
-    public CarrinhoEntity(List<ItemEntity> listaItens) {
+    public CarrinhoEntity(Long idUsuario ,List<ItemEntity> listaItens) {
+        this.idUsuario = idUsuario;
         this.listaItens = listaItens;
     }
 
@@ -78,9 +80,16 @@ public class CarrinhoEntity {
 
     public void calvularValorTotalCarrinho(BigDecimal valorTotal) throws BusinessException{
         if(valorTotal.compareTo(BigDecimal.ZERO) == 0 || valorTotal.compareTo(BigDecimal.ZERO) < 0) {
-            throw new BusinessException("Valor não pode ser igual ou menor que zero");
+            throw new BusinessException("Valor total dos itens não pode ser igual ou menor que zero");
         }
         this.valorTotal = this.valorTotal.add(valorTotal);
+    }
+
+    @PrePersist
+    public void prePersist() throws BusinessException {
+        for (ItemEntity item : listaItens) {
+            item.informarCarrinho(this);
+        }
     }
 
     

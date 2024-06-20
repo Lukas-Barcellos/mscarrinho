@@ -64,7 +64,14 @@ public class ItemEntity {
         if(valorTotalItens.compareTo(BigDecimal.ZERO) == 0){
             throw new BusinessException("Valor total não pode ser igual a zero.");
         }
-        this.valorItens = valorItens;
+        this.valorItens = valorTotalItens;
+    }
+
+    public void informarCarrinho(CarrinhoEntity carrinho) throws BusinessException {
+        if (carrinho == null){
+            throw new BusinessException("Carrinho deve ser informado");
+        }
+        this.carrinho = carrinho;
     }
 
 }
