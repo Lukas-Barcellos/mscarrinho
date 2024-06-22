@@ -1,11 +1,9 @@
 package br.com.fiap.mscarrinho.domain.dto;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import br.com.fiap.estrutura.exception.BusinessException;
-import br.com.fiap.mscarrinho.domain.entity.FormaPagamentoEnum;
 import br.com.fiap.mscarrinho.domain.entity.ItemEntity;
 
 public record CarrinhoDtoRequest(

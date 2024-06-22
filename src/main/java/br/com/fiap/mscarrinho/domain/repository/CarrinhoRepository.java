@@ -7,4 +7,5 @@ import br.com.fiap.mscarrinho.domain.entity.CarrinhoEntity;
 
 @Repository
 public interface CarrinhoRepository extends JpaRepository<CarrinhoEntity, Long> {
+    
 }
