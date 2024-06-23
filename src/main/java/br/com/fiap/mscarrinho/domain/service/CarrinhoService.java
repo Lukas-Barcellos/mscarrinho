@@ -129,6 +129,17 @@ public class CarrinhoService {
         }
         return carrinho.toDto();
     }
+
+    public String deletarCarrinho(Long id) throws BusinessException {
+        CarrinhoEntity carrinho = carrinhoRepository.findById(id).orElse(null);
+        if(carrinho ==  null){
+            throw new BusinessException("Carrinho inexistente");
+        } else {
+            carrinhoRepository.deleteById(id);
+        }
+        String resposta = "Carrinho excluído com sucesso";
+        return resposta;
+    }
 }
 
 //deletar 1 quantidade do item

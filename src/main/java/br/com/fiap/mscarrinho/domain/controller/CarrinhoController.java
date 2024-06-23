@@ -14,6 +14,8 @@ import br.com.fiap.estrutura.utils.SpringControllerUtils;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.service.CarrinhoService;
 import io.swagger.v3.oas.annotations.Operation;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -38,6 +40,14 @@ public class CarrinhoController {
     public ResponseEntity<?> getCarrinho(@RequestParam Long id) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.buscarCarrinho(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Exclui um carrinho")
+    @ApiResponseSwaggerOk
+    public ResponseEntity<?> deleteCarrinho(@RequestParam Long id) {
+        return SpringControllerUtils.response(HttpStatus.OK, 
+                () -> carrinhoService.deletarCarrinho(id));
     }
 
 }

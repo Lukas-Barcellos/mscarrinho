@@ -40,7 +40,7 @@ public class CarrinhoEntity {
     private int quantidadeItens;
     @Column(name = "valor_total")
     private BigDecimal valorTotal;
-    @OneToMany(mappedBy = "carrinho", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "carrinho", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<ItemEntity> listaItens;
     
     public CarrinhoEntity(Long idUsuario, int quantidadeItens, BigDecimal valorTotal,
