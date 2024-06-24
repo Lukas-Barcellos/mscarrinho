@@ -3,11 +3,7 @@ package br.com.fiap.mscarrinho.domain.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-import org.checkerframework.checker.units.qual.m;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -45,7 +41,8 @@ public class CarrinhoService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public CarrinhoService(CarrinhoRepository carrinhoRepository, ItemRepository itemRepository ,ProdutoConsumer produtoConsumer, PedidoProducer pedidoProducer) {
+    public CarrinhoService(CarrinhoRepository carrinhoRepository, ItemRepository itemRepository,
+            ProdutoConsumer produtoConsumer, PedidoProducer pedidoProducer) {
         this.carrinhoRepository = carrinhoRepository;
         this.itemRepository = itemRepository;
         this.produtoConsumer = produtoConsumer;
@@ -63,11 +60,11 @@ public class CarrinhoService {
 
                 try {
                     ItemEntity produtoEncontrado = carrinhoExistente.getListaItens().stream()
-                    .filter(p -> p.getIdProduto() == produtoRequest.getIdProduto()).findFirst().orElse(null);
-                    
-                    if(produtoEncontrado == null){
+                            .filter(p -> p.getIdProduto() == produtoRequest.getIdProduto()).findFirst().orElse(null);
 
-                        ItemEntity itemNovo =  criarItem(produtoRequest.getIdProduto(), produtoRequest.getQuantidade());
+                    if (produtoEncontrado == null) {
+
+                        ItemEntity itemNovo = criarItem(produtoRequest.getIdProduto(), produtoRequest.getQuantidade());
 
                         itemNovo.setCarrinho(carrinhoExistente);
 
@@ -76,9 +73,11 @@ public class CarrinhoService {
                         novaLista.add(itemNovo);
 
                         carrinhoExistente.setListaItens(novaLista);
-                    } else{
-                        produtoEncontrado.setQuantidade(produtoEncontrado.getQuantidade() + produtoRequest.getQuantidade());
-                        produtoEncontrado.setValorItens(calcularValorTotalItens(produtoEncontrado.getQuantidade(), produtoEncontrado.getPreco()));
+                    } else {
+                        produtoEncontrado
+                                .setQuantidade(produtoEncontrado.getQuantidade() + produtoRequest.getQuantidade());
+                        produtoEncontrado.setValorItens(calcularValorTotalItens(produtoEncontrado.getQuantidade(),
+                                produtoEncontrado.getPreco()));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -86,7 +85,7 @@ public class CarrinhoService {
             }
         } else {
             List<ItemEntity> novosItens = new ArrayList<>();
-            for(ItemEntity item : carrinhoDtoRequest.toEntityListItem()) {
+            for (ItemEntity item : carrinhoDtoRequest.toEntityListItem()) {
                 novosItens.add(criarItem(item.getIdProduto(), item.getQuantidade()));
             }
 
@@ -105,20 +104,21 @@ public class CarrinhoService {
         return carrinhoRetorno.toDto();
     }
 
-    private ItemEntity criarItem(Long idProduto, Long quantidadeProduto) throws BusinessException{
+    private ItemEntity criarItem(Long idProduto, Long quantidadeProduto) throws BusinessException {
         ItemDtoResponse produto = this.produtoConsumer.obterProduto(idProduto);
 
-                        if (produto == null) {
-                            throw new BusinessException("Item " + idProduto + " não encontrado");
-                        }
-                        if (produto.preco() == 0) {
-                            throw new BusinessException("Item " + idProduto + " não possui valor cadastrado");
-                        }
-            
-                        ItemEntity itemNovo = new ItemEntity(0L, idProduto, quantidadeProduto, produto.preco(), calcularValorTotalItens(quantidadeProduto, produto.preco()), null);
-                        
-            ItemEntity itemRetorno = itemRepository.save(itemNovo);
-            return itemRetorno;
+        if (produto == null) {
+            throw new BusinessException("Item " + idProduto + " não encontrado");
+        }
+        if (produto.preco() == 0) {
+            throw new BusinessException("Item " + idProduto + " não possui valor cadastrado");
+        }
+
+        ItemEntity itemNovo = new ItemEntity(0L, idProduto, quantidadeProduto, produto.preco(),
+                calcularValorTotalItens(quantidadeProduto, produto.preco()), null);
+
+        ItemEntity itemRetorno = itemRepository.save(itemNovo);
+        return itemRetorno;
     }
 
     private void calcularValorTotalCarrinho(CarrinhoEntity carrinho) throws BusinessException {
@@ -145,10 +145,10 @@ public class CarrinhoService {
         CarrinhoEntity carrinhoEntity = buscarCarrinhoEntity(id);
 
         CarrinhoPedidoDto carrinho = carrinhoEntity.toCarrinhoPedidoDto();
-        
+
         ResponseEntity<String> enviarCarrinho = pedidoProducer.mandarPedido(carrinho);
 
-        if(enviarCarrinho.getStatusCode().is2xxSuccessful()) {
+        if (enviarCarrinho.getStatusCode().is2xxSuccessful()) {
             deletarCarrinho(carrinhoEntity.getIdCarrinho());
         } else {
             throw new BusinessException("Conexão com ms pedido não estabelecida");
@@ -163,9 +163,9 @@ public class CarrinhoService {
         carrinhoRepository.deleteById(id);
     }
 
-    private CarrinhoEntity buscarCarrinhoEntity(Long id) throws BusinessException{
+    private CarrinhoEntity buscarCarrinhoEntity(Long id) throws BusinessException {
         CarrinhoEntity carrinho = carrinhoRepository.findById(id).orElse(null);
-        if(carrinho ==  null){
+        if (carrinho == null) {
             throw new BusinessException("Carrinho inexistente");
         }
 
@@ -173,62 +173,62 @@ public class CarrinhoService {
     }
 
     @Transactional
-    public String deletarItemCarrinho(Long idCarrinho,Long idProduto, Long quantidade) throws BusinessException{
+    public String deletarItemCarrinho(Long idCarrinho, Long idProduto, Long quantidade) throws BusinessException {
 
         CarrinhoEntity carrinho = buscarCarrinhoEntity(idCarrinho);
-        
+
         ItemEntity ItemCarrinho = carrinho.getListaItens().stream()
                 .filter(item -> item.getIdProduto().equals(idProduto))
                 .findFirst().orElse(null);
 
-                if (ItemCarrinho == null) {
-                    throw new BusinessException("Produto não encontrado no carrinho");
-                }
+        if (ItemCarrinho == null) {
+            throw new BusinessException("Produto não encontrado no carrinho");
+        }
 
-                if(quantidade == 0){
-                    throw new BusinessException("Quantidade deve ser maior que zero");
-                }
-        
-                if (quantidade > ItemCarrinho.getQuantidade()) {
-                    throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
-                }
-        
-                if (quantidade == ItemCarrinho.getQuantidade()) {
-                    List<ItemEntity> carrinhoSemItem = carrinho.getListaItens().stream()
-                .filter(item -> !(ItemCarrinho.getIdProduto().equals(idProduto))).toList();
+        if (quantidade == 0) {
+            throw new BusinessException("Quantidade deve ser maior que zero");
+        }
 
-                    carrinho.setListaItens(carrinhoSemItem);
-                    itemRepository.delete(ItemCarrinho);
+        if (quantidade > ItemCarrinho.getQuantidade()) {
+            throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
+        }
 
-                } else {
-                    ItemCarrinho.setQuantidade(ItemCarrinho.getQuantidade() - quantidade);
-                    ItemCarrinho.atualizarValorItens();
-                    itemRepository.save(ItemCarrinho);
-                }
-        
-                atualizarCarrinho(carrinho);
-        
-                if (carrinho.getQuantidadeItens() == 0) {
-                    deletarCarrinho(carrinho.getIdCarrinho());
-                }
-        
-                return "Item excluído com sucesso";
+        if (quantidade == ItemCarrinho.getQuantidade()) {
+            List<ItemEntity> carrinhoSemItem = carrinho.getListaItens().stream()
+                    .filter(item -> !(ItemCarrinho.getIdProduto().equals(idProduto))).toList();
+
+            carrinho.setListaItens(carrinhoSemItem);
+            itemRepository.delete(ItemCarrinho);
+
+        } else {
+            ItemCarrinho.setQuantidade(ItemCarrinho.getQuantidade() - quantidade);
+            ItemCarrinho.atualizarValorItens();
+            itemRepository.save(ItemCarrinho);
+        }
+
+        atualizarCarrinho(carrinho);
+
+        if (carrinho.getQuantidadeItens() == 0) {
+            deletarCarrinho(carrinho.getIdCarrinho());
+        }
+
+        return "Item excluído com sucesso";
     }
 
     private void atualizarCarrinho(CarrinhoEntity carrinho) throws BusinessException {
         carrinho.setListaItens(itemRepository.findByCarrinho(carrinho));
-    
+
         BigDecimal valorTotalCarrinho = BigDecimal.ZERO;
         Long quantidadeTotalCarrinho = 0L;
-    
+
         for (ItemEntity item : carrinho.getListaItens()) {
             valorTotalCarrinho = valorTotalCarrinho.add(item.getValorItens());
             quantidadeTotalCarrinho += item.getQuantidade();
         }
-    
+
         carrinho.setValorTotal(valorTotalCarrinho);
         carrinho.setQuantidadeItens(quantidadeTotalCarrinho);
-    
+
         carrinhoRepository.save(carrinho);
         entityManager.flush();
         entityManager.clear();
