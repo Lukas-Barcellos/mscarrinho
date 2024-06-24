@@ -177,21 +177,24 @@ public class CarrinhoService {
 
         CarrinhoEntity carrinho = buscarCarrinhoEntity(idCarrinho);
         
-        Optional<ItemEntity> optionalItem = carrinho.getListaItens().stream()
+        ItemEntity ItemCarrinho = carrinho.getListaItens().stream()
                 .filter(item -> item.getIdProduto().equals(idProduto))
-                .findFirst();
+                .findFirst().orElse(null);
 
-                if (optionalItem.isEmpty()) {
+                if (ItemCarrinho == null) {
                     throw new BusinessException("Produto não encontrado no carrinho");
                 }
         
-                ItemEntity item = optionalItem.get();
+               // ItemEntity item = optionalItem.get();
         
                 if (quantidade > item.getQuantidade()) {
                     throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
                 }
         
                 if (quantidade == item.getQuantidade()) {
+                    List<ItemEntity> carrinhoSemItem = carrinho.getListaItens().stream()
+                .filter(item -> !(item.getIdProduto().equals(idProduto)));
+                    carrinho.setListaItens(carrinhoSemItem);
                     itemRepository.delete(item);
                 } else {
                     item.setQuantidade(item.getQuantidade() - quantidade);
