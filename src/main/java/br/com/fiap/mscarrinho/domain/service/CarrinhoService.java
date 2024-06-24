@@ -184,6 +184,10 @@ public class CarrinhoService {
                 if (ItemCarrinho == null) {
                     throw new BusinessException("Produto não encontrado no carrinho");
                 }
+
+                if(quantidade == 0){
+                    throw new BusinessException("Quantidade deve ser maior que zero");
+                }
         
                 if (quantidade > ItemCarrinho.getQuantidade()) {
                     throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
