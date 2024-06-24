@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import br.com.fiap.estrutura.exception.BusinessException;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -37,21 +38,19 @@ public class CarrinhoEntity {
     @Column(name = "cd_usuario")
     private Long idUsuario;
     @Column(name = "qtd_itens")
-    private int quantidadeItens;
+    private Long quantidadeItens;
     @Column(name = "valor_total")
     private BigDecimal valorTotal;
     @OneToMany(mappedBy = "carrinho", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<ItemEntity> listaItens;
-    
-    public CarrinhoEntity(Long idUsuario, int quantidadeItens, BigDecimal valorTotal,
-            List<ItemEntity> listaItens) {
-        this.idUsuario = idUsuario;
-        this.quantidadeItens = quantidadeItens;
-        this.valorTotal = valorTotal;
-        this.listaItens = listaItens;
-    }
 
-    public CarrinhoEntity(Long idUsuario ,List<ItemEntity> listaItens) {
+    public CarrinhoEntity(Long idUsuario ,List<ItemEntity> listaItens) throws BusinessException{
+        if(idUsuario == 0) {
+            throw new BusinessException("Usuário não informado");
+        }
+        if(listaItens.size() == 0){
+            throw new BusinessException("A lista de itens está vazia");
+        }
         this.idUsuario = idUsuario;
         this.listaItens = listaItens;
     }
@@ -64,6 +63,15 @@ public class CarrinhoEntity {
             this.valorTotal, 
             this.toListDto()
         );
+    }
+
+    public CarrinhoPedidoDto toCarrinhoPedidoDto(){
+        return new CarrinhoPedidoDto(
+            this.idUsuario, 
+            this.quantidadeItens, 
+            this.valorTotal, 
+            this.toListDto()
+            );
     }
 
     public List<ItemDtoResponse> toListDto(){

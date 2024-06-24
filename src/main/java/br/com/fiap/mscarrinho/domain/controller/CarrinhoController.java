@@ -12,7 +12,9 @@ import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerCreate;
 import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerOk;
 import br.com.fiap.estrutura.utils.SpringControllerUtils;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
 import br.com.fiap.mscarrinho.domain.service.CarrinhoService;
+import feign.Response;
 import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,7 +28,7 @@ public class CarrinhoController {
     @Autowired
     private CarrinhoService carrinhoService;
 
-    @PostMapping
+    @PostMapping("/criar")
     @Operation(summary = "Adiciona Produtos a um carrinho")
     @ApiResponseSwaggerCreate
     public ResponseEntity<?> criarCarrinho(@RequestBody CarrinhoDtoRequest carrinho) {
@@ -34,7 +36,7 @@ public class CarrinhoController {
                 () -> carrinhoService.adicionarAoCarrinho(carrinho));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/buscar/{id}")
     @Operation(summary = "Retorna dados do carrinho")
     @ApiResponseSwaggerOk
     public ResponseEntity<?> getCarrinho(@RequestParam Long id) {
@@ -42,12 +44,20 @@ public class CarrinhoController {
                 () -> carrinhoService.buscarCarrinho(id));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Exclui um carrinho")
-    @ApiResponseSwaggerOk
-    public ResponseEntity<?> deleteCarrinho(@RequestParam Long id) {
+    @PostMapping("/pedido/{id}")
+    @Operation(summary = "Envia carrinho para MS Pedido")
+    public ResponseEntity<?> postPedido(@RequestParam Long id) {
         return SpringControllerUtils.response(HttpStatus.OK, 
-                () -> carrinhoService.deletarCarrinho(id));
+                () -> carrinhoService.enviarCarrinho(id));
+    }
+    
+
+    @DeleteMapping("/{idProduto}")
+    @Operation(summary = "Exclui um produto do carrinho")
+    @ApiResponseSwaggerOk
+    public ResponseEntity<?> excluirItemCarrinho(@RequestParam Long idCarrinho, Long idProduto, Long quantidade) {
+        return SpringControllerUtils.response(HttpStatus.OK, 
+                () -> carrinhoService.deletarItemCarrinho(idCarrinho ,idProduto, quantidade));
     }
 
 }

@@ -31,9 +31,9 @@ public class ItemEntity {
     @Column(name = "cd_item_carrinho", unique = true)
     private Long idItem;
     @Column(name = "cd_produto")
-    private long idProduto;
+    private Long idProduto;
     @Column(name = "nu_quantidade")
-    private int quantidade;
+    private Long quantidade;
     @Column(name = "preco_un")
     private double preco;
     @Column(name = "valor_total")
@@ -65,7 +65,7 @@ public class ItemEntity {
     }
 
 
-    public ItemEntity(long idProduto, int quantidade) throws BusinessException {
+    public ItemEntity(long idProduto, Long quantidade) throws BusinessException {
         if(idProduto == 0) {
             throw new BusinessException("Produto não informado");
         }
@@ -90,6 +90,11 @@ public class ItemEntity {
             throw new BusinessException("Valor total não pode ser igual a zero.");
         }
         this.valorItens = valorTotalItens;
+    }
+
+    public void atualizarValorItens(){
+        BigDecimal precoUnitario = BigDecimal.valueOf(this.preco);
+        this.valorItens = precoUnitario.multiply(BigDecimal.valueOf(this.quantidade));
     }
 
     public void informarCarrinho(CarrinhoEntity carrinho) throws BusinessException {

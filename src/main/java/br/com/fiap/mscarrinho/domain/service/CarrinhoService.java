@@ -7,18 +7,25 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.checkerframework.checker.units.qual.m;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import br.com.fiap.estrutura.exception.BusinessException;
+import br.com.fiap.mscarrinho.domain.consumer.PedidoProducer;
 import br.com.fiap.mscarrinho.domain.consumer.ProdutoConsumer;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import br.com.fiap.mscarrinho.domain.entity.CarrinhoEntity;
 import br.com.fiap.mscarrinho.domain.entity.ItemEntity;
 import br.com.fiap.mscarrinho.domain.repository.CarrinhoRepository;
 import br.com.fiap.mscarrinho.domain.repository.ItemRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CarrinhoService {
@@ -32,14 +39,21 @@ public class CarrinhoService {
     @Autowired
     private final ProdutoConsumer produtoConsumer;
 
-    public CarrinhoService(CarrinhoRepository carrinhoRepository, ItemRepository itemRepository ,ProdutoConsumer produtoConsumer) {
+    @Autowired
+    private final PedidoProducer pedidoProducer;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public CarrinhoService(CarrinhoRepository carrinhoRepository, ItemRepository itemRepository ,ProdutoConsumer produtoConsumer, PedidoProducer pedidoProducer) {
         this.carrinhoRepository = carrinhoRepository;
         this.itemRepository = itemRepository;
         this.produtoConsumer = produtoConsumer;
+        this.pedidoProducer = pedidoProducer;
     }
 
     public CarrinhoDtoResponse adicionarAoCarrinho(CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
-        CarrinhoEntity carrinhoExistente = carrinhoRepository.findById(carrinhoDtoRequest.idUsuario()).orElse(null);
+        CarrinhoEntity carrinhoExistente = carrinhoRepository.findByIdUsuario(carrinhoDtoRequest.idUsuario());
 
         if (carrinhoExistente != null) {
 
@@ -81,7 +95,7 @@ public class CarrinhoService {
 
         this.calcularValorTotalCarrinho(carrinhoExistente);
 
-        int quantidadeTotalItens = 0;
+        Long quantidadeTotalItens = 0L;
         for (ItemEntity item : carrinhoExistente.getListaItens()) {
             quantidadeTotalItens += item.getQuantidade();
         }
@@ -91,7 +105,7 @@ public class CarrinhoService {
         return carrinhoRetorno.toDto();
     }
 
-    private ItemEntity criarItem(Long idProduto, int quantidadeProduto) throws BusinessException{
+    private ItemEntity criarItem(Long idProduto, Long quantidadeProduto) throws BusinessException{
         ItemDtoResponse produto = this.produtoConsumer.obterProduto(idProduto);
 
                         if (produto == null) {
@@ -101,7 +115,7 @@ public class CarrinhoService {
                             throw new BusinessException("Item " + idProduto + " não possui valor cadastrado");
                         }
             
-                        ItemEntity itemNovo = new ItemEntity(0L, produto.id(), quantidadeProduto, produto.preco(), calcularValorTotalItens(quantidadeProduto, produto.preco()), null);
+                        ItemEntity itemNovo = new ItemEntity(0L, idProduto, quantidadeProduto, produto.preco(), calcularValorTotalItens(quantidadeProduto, produto.preco()), null);
                         
             ItemEntity itemRetorno = itemRepository.save(itemNovo);
             return itemRetorno;
@@ -118,38 +132,99 @@ public class CarrinhoService {
         carrinho.setValorTotal(valorTotalCarrinho);
     }
 
-    private BigDecimal calcularValorTotalItens(int quantidade, double valorUnitario) {
+    private BigDecimal calcularValorTotalItens(Long quantidade, double valorUnitario) {
         return BigDecimal.valueOf(quantidade * valorUnitario);
     }
 
     public CarrinhoDtoResponse buscarCarrinho(Long id) throws BusinessException {
-        CarrinhoEntity carrinho = carrinhoRepository.findById(id).orElse(null);
-        if (carrinho == null) {
-            throw new BusinessException("Carrinho não encontrado");
-        }
+        CarrinhoEntity carrinho = buscarCarrinhoEntity(id);
         return carrinho.toDto();
     }
 
-    public String deletarCarrinho(Long id) throws BusinessException {
+    public String enviarCarrinho(Long id) throws BusinessException {
+        CarrinhoEntity carrinhoEntity = buscarCarrinhoEntity(id);
+
+        CarrinhoPedidoDto carrinho = carrinhoEntity.toCarrinhoPedidoDto();
+        
+        ResponseEntity<String> enviarCarrinho = pedidoProducer.mandarPedido(carrinho);
+
+        if(enviarCarrinho.getStatusCode().is2xxSuccessful()) {
+            deletarCarrinho(carrinhoEntity.getIdCarrinho());
+        } else {
+            throw new BusinessException("Conexão com ms pedido não estabelecida");
+        }
+
+        String resposta = "Carrinho enviado com sucesso";
+        return resposta;
+    }
+
+    public void deletarCarrinho(Long id) throws BusinessException {
+        CarrinhoEntity carrinho = buscarCarrinhoEntity(id);
+        carrinhoRepository.deleteById(id);
+    }
+
+    private CarrinhoEntity buscarCarrinhoEntity(Long id) throws BusinessException{
         CarrinhoEntity carrinho = carrinhoRepository.findById(id).orElse(null);
         if(carrinho ==  null){
             throw new BusinessException("Carrinho inexistente");
-        } else {
-            carrinhoRepository.deleteById(id);
         }
-        String resposta = "Carrinho excluído com sucesso";
-        return resposta;
+
+        return carrinho;
+    }
+
+    @Transactional
+    public String deletarItemCarrinho(Long idCarrinho,Long idProduto, Long quantidade) throws BusinessException{
+
+        CarrinhoEntity carrinho = buscarCarrinhoEntity(idCarrinho);
+        
+        Optional<ItemEntity> optionalItem = carrinho.getListaItens().stream()
+                .filter(item -> item.getIdProduto().equals(idProduto))
+                .findFirst();
+
+                if (optionalItem.isEmpty()) {
+                    throw new BusinessException("Produto não encontrado no carrinho");
+                }
+        
+                ItemEntity item = optionalItem.get();
+        
+                if (quantidade > item.getQuantidade()) {
+                    throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
+                }
+        
+                if (quantidade == item.getQuantidade()) {
+                    itemRepository.delete(item);
+                } else {
+                    item.setQuantidade(item.getQuantidade() - quantidade);
+                    item.atualizarValorItens();
+                    itemRepository.save(item);
+                }
+        
+                atualizarCarrinho(carrinho);
+        
+                // if (carrinho.getQuantidadeItens() == 0) {
+                //     deletarCarrinho(carrinho.getIdCarrinho());
+                //     System.out.println("Carrinho excluído pois não há mais itens presentes");
+                // }
+        
+                return "Item excluído com sucesso";
+    }
+
+    private void atualizarCarrinho(CarrinhoEntity carrinho) throws BusinessException {
+        carrinho.setListaItens(itemRepository.findByCarrinho(carrinho));
+    
+        BigDecimal valorTotalCarrinho = BigDecimal.ZERO;
+        Long quantidadeTotalCarrinho = 0L;
+    
+        for (ItemEntity item : carrinho.getListaItens()) {
+            valorTotalCarrinho = valorTotalCarrinho.add(item.getValorItens());
+            quantidadeTotalCarrinho += item.getQuantidade();
+        }
+    
+        carrinho.setValorTotal(valorTotalCarrinho);
+        carrinho.setQuantidadeItens(quantidadeTotalCarrinho);
+    
+        carrinhoRepository.save(carrinho);
+        entityManager.flush();
+        entityManager.clear();
     }
 }
-
-//deletar 1 quantidade do item
-// procurar na lista de itens do carrinho o id e diminuir a quantdade em 1
-
-//deletar o item todo
-// fazer um getcarrinho e pegar a lista de itens, com essa lista de itens procurar o produto que quero excluir pegar o valor total de itens e diminuir o valor total do carrinho e pegar a quantidade total dos itens e diminuir a quantidade total do carrinho
-
-// a quantidade é maior que a quantidade itens no carrinho daquele item? diminui a quantidade, se não, tira o item todo
-
-
-//deletar carrinho
-// deletar pelo id do carrinho

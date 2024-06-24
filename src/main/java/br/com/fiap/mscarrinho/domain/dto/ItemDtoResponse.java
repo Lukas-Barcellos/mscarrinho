@@ -1,8 +1,8 @@
 package br.com.fiap.mscarrinho.domain.dto;
 
 public record ItemDtoResponse(
-    Long id,
-    int quantidade,
+    Long idProduto,
+    Long quantidade,
     double preco
 ){}
 
