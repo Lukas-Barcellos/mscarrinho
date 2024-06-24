@@ -185,29 +185,28 @@ public class CarrinhoService {
                     throw new BusinessException("Produto não encontrado no carrinho");
                 }
         
-               // ItemEntity item = optionalItem.get();
-        
-                if (quantidade > item.getQuantidade()) {
+                if (quantidade > ItemCarrinho.getQuantidade()) {
                     throw new BusinessException("Quantidade informada maior do que a existente no carrinho");
                 }
         
-                if (quantidade == item.getQuantidade()) {
+                if (quantidade == ItemCarrinho.getQuantidade()) {
                     List<ItemEntity> carrinhoSemItem = carrinho.getListaItens().stream()
-                .filter(item -> !(item.getIdProduto().equals(idProduto)));
+                .filter(item -> !(ItemCarrinho.getIdProduto().equals(idProduto))).toList();
+
                     carrinho.setListaItens(carrinhoSemItem);
-                    itemRepository.delete(item);
+                    itemRepository.delete(ItemCarrinho);
+
                 } else {
-                    item.setQuantidade(item.getQuantidade() - quantidade);
-                    item.atualizarValorItens();
-                    itemRepository.save(item);
+                    ItemCarrinho.setQuantidade(ItemCarrinho.getQuantidade() - quantidade);
+                    ItemCarrinho.atualizarValorItens();
+                    itemRepository.save(ItemCarrinho);
                 }
         
                 atualizarCarrinho(carrinho);
         
-                // if (carrinho.getQuantidadeItens() == 0) {
-                //     deletarCarrinho(carrinho.getIdCarrinho());
-                //     System.out.println("Carrinho excluído pois não há mais itens presentes");
-                // }
+                if (carrinho.getQuantidadeItens() == 0) {
+                    deletarCarrinho(carrinho.getIdCarrinho());
+                }
         
                 return "Item excluído com sucesso";
     }
