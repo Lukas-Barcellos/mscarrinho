@@ -9,13 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import br.com.fiap.estrutura.exception.BusinessException;
-import br.com.fiap.mscarrinho.domain.consumer.PedidoProducer;
+import br.com.fiap.mscarrinho.domain.consumer.PagamentoProducer;
 import br.com.fiap.mscarrinho.domain.consumer.ProdutoConsumer;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
-import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPagamentoDto;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import br.com.fiap.mscarrinho.domain.entity.CarrinhoEntity;
+import br.com.fiap.mscarrinho.domain.entity.FormaPagamento;
 import br.com.fiap.mscarrinho.domain.entity.ItemEntity;
 import br.com.fiap.mscarrinho.domain.repository.CarrinhoRepository;
 import br.com.fiap.mscarrinho.domain.repository.ItemRepository;
@@ -36,17 +37,17 @@ public class CarrinhoService {
     private final ProdutoConsumer produtoConsumer;
 
     @Autowired
-    private final PedidoProducer pedidoProducer;
+    private final PagamentoProducer pagamentoProducer;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public CarrinhoService(CarrinhoRepository carrinhoRepository, ItemRepository itemRepository,
-            ProdutoConsumer produtoConsumer, PedidoProducer pedidoProducer) {
+            ProdutoConsumer produtoConsumer, PagamentoProducer pedidoProducer) {
         this.carrinhoRepository = carrinhoRepository;
         this.itemRepository = itemRepository;
         this.produtoConsumer = produtoConsumer;
-        this.pedidoProducer = pedidoProducer;
+        this.pagamentoProducer = pedidoProducer;
     }
 
     public CarrinhoDtoResponse adicionarAoCarrinho(CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
@@ -144,9 +145,11 @@ public class CarrinhoService {
     public String enviarCarrinho(Long id) throws BusinessException {
         CarrinhoEntity carrinhoEntity = buscarCarrinhoEntity(id);
 
-        CarrinhoPedidoDto carrinho = carrinhoEntity.toCarrinhoPedidoDto();
+        CarrinhoPagamentoDto carrinho = carrinhoEntity.toCarrinhoPedidoDto();
+        FormaPagamento formaPagamento = FormaPagamento.PIX;
+        carrinho.setFormaPagamento(formaPagamento);
 
-        ResponseEntity<String> enviarCarrinho = pedidoProducer.mandarPedido(carrinho);
+        ResponseEntity<String> enviarCarrinho = pagamentoProducer.mandarPagamento(carrinho);
 
         if (enviarCarrinho.getStatusCode().is2xxSuccessful()) {
             deletarCarrinho(carrinhoEntity.getIdCarrinho());

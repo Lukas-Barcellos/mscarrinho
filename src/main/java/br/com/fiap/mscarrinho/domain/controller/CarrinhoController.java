@@ -41,9 +41,9 @@ public class CarrinhoController {
                 () -> carrinhoService.buscarCarrinho(id));
     }
 
-    @PostMapping("/pedido/{id}")
-    @Operation(summary = "Envia carrinho para MS Pedido")
-    public ResponseEntity<?> postPedido(@RequestParam Long id) {
+    @PostMapping("/pagmento/{id}")
+    @Operation(summary = "Envia carrinho para MS Pagamento")
+    public ResponseEntity<?> postPagamento(@RequestParam Long id) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.enviarCarrinho(id));
     }

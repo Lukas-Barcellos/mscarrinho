@@ -4,12 +4,12 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPagamentoDto;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
-@FeignClient(name = "pedido", url = "${pedido.url}")
-public interface PedidoProducer {
+@FeignClient(name = "pagamento", url = "${pagamento.url}")
+public interface PagamentoProducer {
     @PostMapping
-    ResponseEntity<String> mandarPedido(@RequestBody CarrinhoPedidoDto carrinho);
+    ResponseEntity<String> mandarPagamento(@RequestBody CarrinhoPagamentoDto carrinho);
     
 }

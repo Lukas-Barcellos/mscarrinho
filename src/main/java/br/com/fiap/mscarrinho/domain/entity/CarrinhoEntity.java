@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import br.com.fiap.estrutura.exception.BusinessException;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
-import br.com.fiap.mscarrinho.domain.dto.CarrinhoPedidoDto;
+import br.com.fiap.mscarrinho.domain.dto.CarrinhoPagamentoDto;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -41,6 +41,8 @@ public class CarrinhoEntity {
     private Long quantidadeItens;
     @Column(name = "valor_total")
     private BigDecimal valorTotal;
+    @Column(name ="forma_pagamento")
+    private FormaPagamento formaPagamento;
     @OneToMany(mappedBy = "carrinho", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<ItemEntity> listaItens;
 
@@ -65,11 +67,12 @@ public class CarrinhoEntity {
         );
     }
 
-    public CarrinhoPedidoDto toCarrinhoPedidoDto(){
-        return new CarrinhoPedidoDto(
+    public CarrinhoPagamentoDto toCarrinhoPedidoDto(){
+        return new CarrinhoPagamentoDto(
             this.idUsuario, 
             this.quantidadeItens, 
             this.valorTotal, 
+            this.formaPagamento,
             this.toListDto()
             );
     }
