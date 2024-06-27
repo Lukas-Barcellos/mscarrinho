@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerCreate;
 import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerOk;
 import br.com.fiap.estrutura.utils.SpringControllerUtils;
+import br.com.fiap.mscarrinho.domain.consumer.PegarIdConsumer;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.service.CarrinhoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,12 +27,24 @@ public class CarrinhoController {
     @Autowired
     private CarrinhoService carrinhoService;
 
+    @Autowired
+    private PegarIdConsumer pegarIdConsumer;
+
     @PostMapping("/criar")
     @Operation(summary = "Adiciona Produtos a um carrinho")
     @ApiResponseSwaggerCreate
-    public ResponseEntity<?> criarCarrinho(@RequestBody CarrinhoDtoRequest carrinho) {
+    public ResponseEntity<?> criarCarrinho(@RequestBody CarrinhoDtoRequest carrinho, @RequestHeader("Authorization") String token) {
+        String tokenAuth = token;
+        
+        String[] getTokenFilter = tokenAuth.split(" ");
+        String result = getTokenFilter[1];
+
+        String pegarId = pegarIdConsumer.obterId(result);
+
+        Long idUsuario = Long.parseLong(pegarId);
+
         return SpringControllerUtils.response(HttpStatus.CREATED,
-                () -> carrinhoService.adicionarAoCarrinho(carrinho));
+                () -> carrinhoService.adicionarAoCarrinho(idUsuario, carrinho));
     }
 
     @GetMapping("/buscar/{id}")

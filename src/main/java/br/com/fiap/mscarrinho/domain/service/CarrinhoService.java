@@ -50,8 +50,8 @@ public class CarrinhoService {
         this.pagamentoProducer = pedidoProducer;
     }
 
-    public CarrinhoDtoResponse adicionarAoCarrinho(CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
-        CarrinhoEntity carrinhoExistente = carrinhoRepository.findByIdUsuario(carrinhoDtoRequest.idUsuario());
+    public CarrinhoDtoResponse adicionarAoCarrinho(Long idUsuario, CarrinhoDtoRequest carrinhoDtoRequest) throws BusinessException {
+        CarrinhoEntity carrinhoExistente = carrinhoRepository.findByIdUsuario(idUsuario);
 
         if (carrinhoExistente != null) {
 
@@ -90,7 +90,7 @@ public class CarrinhoService {
                 novosItens.add(criarItem(item.getIdProduto(), item.getQuantidade()));
             }
 
-            carrinhoExistente = new CarrinhoEntity(carrinhoDtoRequest.idUsuario(), novosItens);
+            carrinhoExistente = new CarrinhoEntity(idUsuario, novosItens);
         }
 
         this.calcularValorTotalCarrinho(carrinhoExistente);

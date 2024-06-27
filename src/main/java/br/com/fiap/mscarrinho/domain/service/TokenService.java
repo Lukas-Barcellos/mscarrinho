@@ -1,10 +1,12 @@
 package br.com.fiap.mscarrinho.domain.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import br.com.fiap.mscarrinho.domain.consumer.AuthConsumer;
 import br.com.fiap.mscarrinho.domain.dto.LoginDtoRequest;
 
+@Service
 public class TokenService {
     private final AuthConsumer authConsumer;
 
