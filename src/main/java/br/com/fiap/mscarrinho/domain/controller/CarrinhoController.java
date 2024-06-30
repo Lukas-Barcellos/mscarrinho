@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerCreate;
@@ -50,14 +50,14 @@ public class CarrinhoController {
     @GetMapping("/buscar/{id}")
     @Operation(summary = "Retorna dados do carrinho")
     @ApiResponseSwaggerOk
-    public ResponseEntity<?> getCarrinho(@RequestParam Long id) {
+    public ResponseEntity<?> getCarrinho(@PathVariable Long id) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.buscarCarrinho(id));
     }
 
     @PostMapping("/pagmento/{id}")
     @Operation(summary = "Envia carrinho para MS Pagamento")
-    public ResponseEntity<?> postPagamento(@RequestParam Long id) {
+    public ResponseEntity<?> postPagamento(@PathVariable Long id) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.enviarCarrinho(id));
     }
@@ -65,7 +65,7 @@ public class CarrinhoController {
     @DeleteMapping("/{idProduto}")
     @Operation(summary = "Exclui um produto do carrinho")
     @ApiResponseSwaggerOk
-    public ResponseEntity<?> excluirItemCarrinho(@RequestParam Long idCarrinho, Long idProduto, Long quantidade) {
+    public ResponseEntity<?> excluirItemCarrinho(@PathVariable Long idCarrinho, Long idProduto, Long quantidade) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.deletarItemCarrinho(idCarrinho, idProduto, quantidade));
     }
