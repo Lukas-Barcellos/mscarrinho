@@ -22,7 +22,7 @@ public class FeignConfig {
         return new RequestInterceptor() {
             @Override
             public void apply(RequestTemplate template) {
-                template.header("Authorizatioin", "Bearer " + getJWT());
+                template.header("Authorization", "Bearer " + getJWT());
             }
         };
     }

@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import br.com.fiap.mscarrinho.domain.consumer.AuthConsumer;
+import br.com.fiap.mscarrinho.domain.dto.AuthTokenDtoResponse;
 import br.com.fiap.mscarrinho.domain.dto.LoginDtoRequest;
 
 @Service
@@ -22,6 +23,7 @@ public class TokenService {
 
     public String generateToken(){
         LoginDtoRequest login = new LoginDtoRequest(this.authLogin,this.authPassword);
-        return this.authConsumer.obterToken(login).token();
+        AuthTokenDtoResponse obterToken = this.authConsumer.obterToken(login);
+        return obterToken.token();
     }
 }

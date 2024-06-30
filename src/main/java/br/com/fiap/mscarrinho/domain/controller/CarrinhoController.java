@@ -17,6 +17,7 @@ import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerOk;
 import br.com.fiap.estrutura.utils.SpringControllerUtils;
 import br.com.fiap.mscarrinho.domain.consumer.PegarIdConsumer;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
+import br.com.fiap.mscarrinho.domain.dto.UsuarioId;
 import br.com.fiap.mscarrinho.domain.service.CarrinhoService;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -34,17 +35,10 @@ public class CarrinhoController {
     @Operation(summary = "Adiciona Produtos a um carrinho")
     @ApiResponseSwaggerCreate
     public ResponseEntity<?> criarCarrinho(@RequestBody CarrinhoDtoRequest carrinho, @RequestHeader("Authorization") String token) {
-        String tokenAuth = token;
-        
-        String[] getTokenFilter = tokenAuth.split(" ");
-        String result = getTokenFilter[1];
-
-        String pegarId = pegarIdConsumer.obterId(result);
-
-        Long idUsuario = Long.parseLong(pegarId);
+        final UsuarioId usuarioId = pegarIdConsumer.obterId(token.replace("Bearer ", ""));
 
         return SpringControllerUtils.response(HttpStatus.CREATED,
-                () -> carrinhoService.adicionarAoCarrinho(idUsuario, carrinho));
+                () -> carrinhoService.adicionarAoCarrinho(usuarioId.idUsuario(), carrinho));
     }
 
     @GetMapping("/buscar/{id}")
