@@ -49,14 +49,14 @@ public class CarrinhoController {
                 () -> carrinhoService.buscarCarrinho(id));
     }
 
-    @PostMapping("/pagmento/{id}")
+    @PostMapping("/pagamento/{id}")
     @Operation(summary = "Envia carrinho para MS Pagamento")
     public ResponseEntity<?> postPagamento(@PathVariable Long id) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.enviarCarrinho(id));
     }
 
-    @DeleteMapping("/{idProduto}")
+    @DeleteMapping("/{idCarrinho}")
     @Operation(summary = "Exclui um produto do carrinho")
     @ApiResponseSwaggerOk
     public ResponseEntity<?> excluirItemCarrinho(@PathVariable Long idCarrinho, Long idProduto, Long quantidade) {

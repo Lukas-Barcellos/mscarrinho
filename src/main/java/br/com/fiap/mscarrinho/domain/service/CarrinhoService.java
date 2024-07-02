@@ -15,6 +15,7 @@ import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoRequest;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoDtoResponse;
 import br.com.fiap.mscarrinho.domain.dto.CarrinhoPagamentoDto;
 import br.com.fiap.mscarrinho.domain.dto.ItemDtoResponse;
+import br.com.fiap.mscarrinho.domain.dto.PagamentoDtoResponse;
 import br.com.fiap.mscarrinho.domain.entity.CarrinhoEntity;
 import br.com.fiap.mscarrinho.domain.entity.FormaPagamento;
 import br.com.fiap.mscarrinho.domain.entity.ItemEntity;
@@ -142,27 +143,26 @@ public class CarrinhoService {
         return carrinho.toDto();
     }
 
-    public String enviarCarrinho(Long id) throws BusinessException {
+    public PagamentoDtoResponse enviarCarrinho(Long id) throws BusinessException {
         CarrinhoEntity carrinhoEntity = buscarCarrinhoEntity(id);
 
         CarrinhoPagamentoDto carrinho = carrinhoEntity.toCarrinhoPedidoDto();
         FormaPagamento formaPagamento = FormaPagamento.PIX;
         carrinho.setFormaPagamento(formaPagamento);
 
-        ResponseEntity<String> enviarCarrinho = pagamentoProducer.mandarPagamento(carrinho);
+        PagamentoDtoResponse enviarCarrinho = pagamentoProducer.mandarPagamento(carrinho);
 
-        if (enviarCarrinho.getStatusCode().is2xxSuccessful()) {
+        if (enviarCarrinho != null) {
             deletarCarrinho(carrinhoEntity.getIdCarrinho());
         } else {
             throw new BusinessException("Conexão com ms pedido não estabelecida");
         }
-
-        String resposta = "Carrinho enviado com sucesso";
-        return resposta;
+        
+        return enviarCarrinho;
     }
 
     public void deletarCarrinho(Long id) throws BusinessException {
-        CarrinhoEntity carrinho = buscarCarrinhoEntity(id);
+        buscarCarrinhoEntity(id);
         carrinhoRepository.deleteById(id);
     }
 
