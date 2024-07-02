@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.estrutura.swagger.annotations.ApiResponseSwaggerCreate;
@@ -31,7 +32,7 @@ public class CarrinhoController {
     @Autowired
     private PegarIdConsumer pegarIdConsumer;
 
-    @PostMapping("/criar")
+    @PostMapping
     @Operation(summary = "Adiciona Produtos a um carrinho")
     @ApiResponseSwaggerCreate
     public ResponseEntity<?> criarCarrinho(@RequestBody CarrinhoDtoRequest carrinho, @RequestHeader("Authorization") String token) {
@@ -41,7 +42,7 @@ public class CarrinhoController {
                 () -> carrinhoService.adicionarAoCarrinho(usuarioId.idUsuario(), carrinho));
     }
 
-    @GetMapping("/buscar/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Retorna dados do carrinho")
     @ApiResponseSwaggerOk
     public ResponseEntity<?> getCarrinho(@PathVariable Long id) {
@@ -56,10 +57,10 @@ public class CarrinhoController {
                 () -> carrinhoService.enviarCarrinho(id));
     }
 
-    @DeleteMapping("/{idCarrinho}")
+    @DeleteMapping
     @Operation(summary = "Exclui um produto do carrinho")
     @ApiResponseSwaggerOk
-    public ResponseEntity<?> excluirItemCarrinho(@PathVariable Long idCarrinho, Long idProduto, Long quantidade) {
+    public ResponseEntity<?> excluirItemCarrinho(@RequestParam Long idCarrinho, @RequestParam Long idProduto, @RequestParam Long quantidade) {
         return SpringControllerUtils.response(HttpStatus.OK,
                 () -> carrinhoService.deletarItemCarrinho(idCarrinho, idProduto, quantidade));
     }
